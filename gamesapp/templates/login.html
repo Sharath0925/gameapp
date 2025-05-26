@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Link to external CSS -->
+<link rel="stylesheet" href="{% static 'css/login.css' %}">
+
+<div class="container mt-5">
+  <h2>Login to Your Account</h2>
+  <form method="POST" action="{% url 'login' %}">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <input type="hidden" name="next" value="{{ next }}">
+    <button type="submit" class="btn btn-primary">Login</button>
+  </form>
+
+  {% if form.errors %}
+    <div class="alert alert-danger mt-3" role="alert">
+      Please correct the error{% if form.errors|length > 1 %}s{% endif %} below.
+    </div>
+  {% endif %}
+
+  <p class="text-center mt-3">
+    Don't have an account? <a href="{% url 'signup' %}?next={{ next }}">Sign up here</a>.
+  </p>
+</div>
+{% endblock %}

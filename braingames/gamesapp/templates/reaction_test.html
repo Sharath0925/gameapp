@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block content %}
+{%load static%}
+<div class="container text-center">
+  <h2>⚡ Reaction Time Test</h2>
+  <p>Wait for the box to turn green, then click as fast as you can!</p>
+  <button class="btn btn-primary" onclick="startTest()">Start</button>
+
+  <div id="testBox" onclick="boxClicked()"></div>
+  <p id="message"></p>
+</div>
+
+<link rel="stylesheet" href="{% static 'css/reaction_test.css' %}">
+<script src="{% static 'js/reaction_test.js' %}"></script>
+{% endblock %}

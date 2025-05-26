@@ -1,0 +1,29 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/view_scores.css' %}">
+
+<div class="main-container">
+  <h3>Hello, {{ user.username }}! Your Game Scores:</h3>
+
+  <table class="score-table mt-3">
+    <thead>
+      <tr>
+        <th>Game</th>
+        <th>Score</th>
+        <th>Timestamp</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for score in scores %}
+      <tr>
+        <td>{{ score.game }}</td>
+        <td>{{ score.score }}</td>
+        <td>{{ score.timestamp }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

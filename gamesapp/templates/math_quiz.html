@@ -1,0 +1,23 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<!-- Link external CSS -->
+<link rel="stylesheet" href="{% static 'css/math_quiz.css' %}">
+
+<div class="container text-center">
+  <h2>🧮 Math Quiz</h2>
+  <p>Solve the math problems as fast as you can! You have 5 questions.</p>
+  
+  <div id="quizArea">
+    <p id="question"></p>
+    <input type="number" id="answer" autocomplete="off" />
+    <button class="btn btn-primary" onclick="submitAnswer()">Submit</button>
+  </div>
+
+  <p id="message"></p>
+</div>
+
+<!-- Load external JS -->
+<script src="{% static 'js/math_quiz.js' %}"></script>
+{% endblock %}

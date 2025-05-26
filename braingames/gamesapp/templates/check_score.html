@@ -1,0 +1,13 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block content %}
+<div class="container mt-5 text-center">
+  <h3>Checking for pending scores...</h3>
+</div>
+
+<!-- CSRF token as a meta tag so JS can read it -->
+<meta name="csrf-token" content="{{ csrf_token }}">
+
+<!-- Include the JavaScript file -->
+<script src="{% static 'js/check_score.js' %}"></script>
+{% endblock %}

@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+  <!-- Link CSS -->
+  <link rel="stylesheet" href="{% static 'css/memory_game.css' %}">
+
+  <div class="container text-center">
+    <h2>🧠 Memory Game</h2>
+    <p>Match all pairs with the fewest moves possible!</p>
+    
+    <div id="gameBoard"></div>
+    
+    <p id="message"></p>
+    <button class="btn btn-primary" onclick="startGame()">Restart</button>
+  </div>
+
+  <!-- Link JS -->
+  <script src="{% static 'js/memory_game.js' %}"></script>
+{% endblock %}
