@@ -7,8 +7,6 @@ from django.http import JsonResponse
 
 from datetime import datetime
 from django.contrib.auth.forms import AuthenticationForm
-from django.views.decorators.csrf import csrf_exempt
-import bcrypt
 import os
 from urllib.parse import quote_plus
 from pymongo import MongoClient
@@ -16,21 +14,15 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
-# Either use MONGO_URI directly (recommended) or username/password separately
-import urllib.parse
-from pymongo import MongoClient
-
-username = urllib.parse.quote_plus("Sharathreddy")
-password = urllib.parse.quote_plus("Sharath")  # '@' becomes '%40'
-
+# MongoDB Setup
+username = quote_plus("Sharathreddy")
+password = quote_plus("Sharath")
 MONGO_URI = f"mongodb+srv://{username}:{password}@cluster0.bz0bvc4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
 
 client = MongoClient(MONGO_URI)
 db = client["brain_games_db"]
 scores_collection = db["scores"]
-users_collection = db["users"]
-
- # Collection to store extra user data
+users_collection = db["users"]  # For extra user info only (not passwords)
 
 # -------------------------------
 # Public Views
@@ -69,15 +61,11 @@ def signup_view(request):
         user = User.objects.create_user(username=username, password=password, email=email)
         user.save()
 
-        # Hash password for MongoDB
-        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
-
-        # Save extra info in MongoDB
+        # Save extra info in MongoDB (excluding password)
         users_collection.insert_one({
             'username': username,
             'email': email,
-            'phone': phone,
-            'password': hashed_password
+            'phone': phone
         })
 
         messages.success(request, 'Signup successful. Please log in.')
@@ -85,7 +73,6 @@ def signup_view(request):
 
     return render(request, 'signup.html')
 
-@csrf_exempt
 def login_view(request):
     if request.method == 'POST':
         form = AuthenticationForm(request, data=request.POST)
@@ -93,10 +80,18 @@ def login_view(request):
             user = form.get_user()
             login(request, user)
             return redirect('check_pending_score')
+        else:
+            return render(request, 'login.html', {
+                'form': form,
+                'error': 'Invalid username or password'
+            })
     else:
         form = AuthenticationForm()
 
-    return render(request, 'login.html', {'form': form, 'next': request.GET.get('next', '')})
+    return render(request, 'login.html', {
+        'form': form,
+        'next': request.GET.get('next', '')
+    })
 
 def logout_view(request):
     logout(request)
@@ -113,17 +108,24 @@ def check_pending_score(request):
 @login_required
 def submit_score(request):
     if request.method == "POST":
-        try:
-            score = int(request.POST.get("score"))
-            game_name = request.POST.get("game", "Unknown")
+        score = request.POST.get("score")
+        game_name = request.POST.get("game", "Unknown")
 
+        if not score or not game_name:
+            return JsonResponse({"status": "error", "message": "Missing score or game name"}, status=400)
+
+        try:
+            score = int(score)
+        except ValueError:
+            return JsonResponse({"status": "error", "message": "Score must be an integer"}, status=400)
+
+        try:
             scores_collection.insert_one({
                 "user": request.user.username,
                 "game": game_name,
                 "score": score,
                 "timestamp": datetime.now()
             })
-
             return JsonResponse({"status": "success"})
         except Exception as e:
             return JsonResponse({"status": "error", "message": str(e)}, status=500)
@@ -134,4 +136,9 @@ def submit_score(request):
 def view_scores(request):
     username = request.user.username
     scores = list(scores_collection.find({"user": username}).sort("timestamp", -1))
+
+    # Remove MongoDB internal _id before rendering
+    for score in scores:
+        score.pop('_id', None)
+
     return render(request, 'view_scores.html', {'scores': scores})
