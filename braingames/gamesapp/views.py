@@ -54,16 +54,12 @@ def signup_view(request):
         if not username or not password or not email or not phone:
             return render(request, 'signup.html', {'error': 'All fields are required'})
 
-        #if User.objects.filter(username=username).exists():
+        if users_collection.find_one({'username': username,'email':email}):
             return render(request, 'signup.html', {'error': 'Username already taken'})
 
-        # Create Django user
-       # user = User.objects.create_user(username=username, password=password, email=email)
-        #user.save()
-
-        # Save extra info in MongoDB (excluding password)
         users_collection.insert_one({
             'username': username,
+            'password': password, 
             'email': email,
             'phone': phone
         })
@@ -75,23 +71,26 @@ def signup_view(request):
 
 def login_view(request):
     if request.method == 'POST':
-        form = AuthenticationForm(request, data=request.POST)
-        if form.is_valid():
-            user = form.get_user()
-            login(request, user)
+        username = request.POST.get('username', '').strip()
+        password = request.POST.get('password', '').strip()
+
+        if not username or not password:
+            return render(request, 'login.html', {'error': 'Username and password are required'})
+
+       
+        
+        user = users_collection.find_one({
+            'username': username,
+            'password': password  
+        })
+
+        if user:
             return redirect('check_pending_score')
         else:
-            return render(request, 'login.html', {
-                'form': form,
-                'error': 'Invalid username or password'
-            })
-    else:
-        form = AuthenticationForm()
+            return render(request, 'login.html', {'error': 'Invalid username or password'})
 
-    return render(request, 'login.html', {
-        'form': form,
-        'next': request.GET.get('next', '')
-    })
+    return render(request, 'login.html')
+
 
 def logout_view(request):
     logout(request)
