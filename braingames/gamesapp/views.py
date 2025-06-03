@@ -54,12 +54,12 @@ def signup_view(request):
         if not username or not password or not email or not phone:
             return render(request, 'signup.html', {'error': 'All fields are required'})
 
-        if User.objects.filter(username=username).exists():
+        #if User.objects.filter(username=username).exists():
             return render(request, 'signup.html', {'error': 'Username already taken'})
 
         # Create Django user
-        user = User.objects.create_user(username=username, password=password, email=email)
-        user.save()
+       # user = User.objects.create_user(username=username, password=password, email=email)
+        #user.save()
 
         # Save extra info in MongoDB (excluding password)
         users_collection.insert_one({
