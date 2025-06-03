@@ -51,12 +51,16 @@ def signup_view(request):
         email = request.POST.get('email', '').strip()
         phone = request.POST.get('phone', '').strip()
 
+        print("username",username)
+        
         if not username or not password or not email or not phone:
             return render(request, 'signup.html', {'error': 'All fields are required'})
 
         if users_collection.find_one({'username': username,'email':email}):
             return render(request, 'signup.html', {'error': 'Username already taken'})
-
+        
+        print("hello")
+        
         users_collection.insert_one({
             'username': username,
             'password': password, 
