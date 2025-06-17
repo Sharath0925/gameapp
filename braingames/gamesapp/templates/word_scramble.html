@@ -1,0 +1,26 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block content %}
+<link rel="stylesheet" href="{% static 'css/word_scramble.css' %}">
+
+<div class="container text-center">
+  <h2>📝 Word Scramble</h2>
+  <p>Unscramble the letters to form a valid word.</p>
+
+  <div id="scrambledWord" class="scrambled-word"></div>
+  
+  <input id="guessInput" type="text" placeholder="Type your guess here" autocomplete="off" />
+  <div class="buttons">
+    <button id="submitBtn" class="btn btn-primary">Submit</button>
+    <button id="restartBtn" class="btn btn-secondary">Restart</button>
+  </div>
+  
+  <p id="message" class="message"></p>
+  <p id="correctAnswer" class="text-warning mt-2"></p>
+ 
+
+</div>
+
+<script src="{% static 'js/word_scramble.js' %}"></script>
+{% endblock %}

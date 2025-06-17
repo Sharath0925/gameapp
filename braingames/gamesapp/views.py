@@ -11,19 +11,24 @@ import os
 from urllib.parse import quote_plus
 from pymongo import MongoClient
 from dotenv import load_dotenv
+from django.views.decorators.csrf import csrf_exempt
+import bcrypt
 
 load_dotenv()
 
 # MongoDB Setup
-username = quote_plus("Sharathreddy")
-password = quote_plus("Sharath")
-MONGO_URI = f"mongodb+srv://{username}:{password}@cluster0.bz0bvc4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+#username = quote_plus("Sharathyanala")
+#password = quote_plus("Sharath123@")
+#MONGO_URI = f"mongodb+srv://{username}:{password}@cluster0.bz0bvc4.mongodb.net/?retryWrites=true&w=majority&appName=Cluster0"
+MONGO_URI = "mongodb://localhost:27017"
 
 client = MongoClient(MONGO_URI)
-db = client["brain_games_db"]
+db = client["gamestore"]
 scores_collection = db["scores"]
 users_collection = db["users"]  # For extra user info only (not passwords)
 
+print("scores_collection")
+print("users_collection")
 # -------------------------------
 # Public Views
 # -------------------------------
@@ -40,6 +45,13 @@ def math_quiz(request):
 def memory_game_view(request):
     return render(request, 'memory_game.html')
 
+def word_scramble(request):
+    return render(request, 'word_scramble.html')
+
+def number_sequence(request):
+    return render(request, 'number_sequence.html')
+
+
 # -------------------------------
 # Authentication Views
 # -------------------------------
@@ -51,21 +63,25 @@ def signup_view(request):
         email = request.POST.get('email', '').strip()
         phone = request.POST.get('phone', '').strip()
 
-        print("username",username)
-        
         if not username or not password or not email or not phone:
             return render(request, 'signup.html', {'error': 'All fields are required'})
 
-        if users_collection.find_one({'username': username,'email':email}):
+        if User.objects.filter(username=username).exists():
             return render(request, 'signup.html', {'error': 'Username already taken'})
-        
-        print("hello")
-        
+
+        # Create Django user
+        user = User.objects.create_user(username=username, password=password, email=email)
+        user.save()
+
+        # Hash password for MongoDB
+        hashed_password = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+
+        # Save extra info in MongoDB
         users_collection.insert_one({
             'username': username,
-            'password': password, 
             'email': email,
-            'phone': phone
+            'phone': phone,
+            'password': hashed_password
         })
 
         messages.success(request, 'Signup successful. Please log in.')
@@ -73,27 +89,19 @@ def signup_view(request):
 
     return render(request, 'signup.html')
 
+@csrf_exempt
 def login_view(request):
     if request.method == 'POST':
-        username = request.POST.get('username', '').strip()
-        password = request.POST.get('password', '').strip()
-
-        if not username or not password:
-            return render(request, 'login.html', {'error': 'Username and password are required'})
-
-       
-        
-        user = users_collection.find_one({
-            'username': username,
-            'password': password  
-        })
-
-        if user:
+        form = AuthenticationForm(request, data=request.POST)
+        if form.is_valid():
+            user = form.get_user()
+            login(request, user)
             return redirect('check_pending_score')
-        else:
-            return render(request, 'login.html', {'error': 'Invalid username or password'})
+    else:
+        form = AuthenticationForm()
 
-    return render(request, 'login.html')
+    return render(request, 'login.html', {'form': form, 'next': request.GET.get('next', '')})
+
 
 
 def logout_view(request):
